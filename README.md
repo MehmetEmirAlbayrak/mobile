@@ -52,7 +52,7 @@ Mobile/
 1. **Clone the repository**
 ```bash
 git clone https://github.com/MehmetEmirAlbayrak/mobile.git
-cd mobile-traffic-classification
+cd mobile
 ```
 
 2. **Create virtual environment**

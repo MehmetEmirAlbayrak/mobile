@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Traffic Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🔍</span>
+                <h1>Network Traffic Classifier</h1>
+            </div>
+            <p class="subtitle">AI-Powered Mobile Network Traffic Analysis • 97% Accuracy</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Model Selection -->
+            <section class="card model-selection">
+                <h2>🤖 Select Model</h2>
+                <div class="model-buttons">
+                    {% for model in models %}
+                    <button class="model-btn {% if loop.first %}active{% endif %}" data-model="{{ model }}">
+                        <span class="model-icon">
+                            {% if model == 'LightGBM' %}⚡{% elif model == 'RandomForest' %}🌲{% elif model == 'XGBoost' %}🚀{% else %}🧠{% endif %}
+                        </span>
+                        <span class="model-name">{{ model }}</span>
+                        <span class="model-acc">
+                            {% if model == 'LightGBM' %}97.1%{% elif model == 'RandomForest' %}97.0%{% elif model == 'XGBoost' %}96.9%{% else %}76.8%{% endif %}
+                        </span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="manual">📝 Manual Input</button>
+                <button class="tab-btn" data-tab="csv">📄 CSV Upload</button>
+                <button class="tab-btn" data-tab="demo">🎮 Demo Mode</button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-contents">
+                <!-- Manual Input Tab -->
+                <div class="tab-content active" id="manual-tab">
+                    <section class="card input-section">
+                        <div class="section-header">
+                            <h2>📊 Enter Flow Features</h2>
+                            <button type="button" id="random-fill-btn" class="random-btn">
+                                🎲 Random Fill
+                            </button>
+                        </div>
+                        <form id="predict-form">
+                            <div class="feature-grid">
+                                <!-- Duration & Packet Info -->
+                                <div class="feature-group">
+                                    <h3>⏱️ Duration & Packets</h3>
+                                    <div class="input-row">
+                                        <label>
+                                            <span>Duration (μs)</span>
+                                            <input type="number" name="duration" value="0" step="any" placeholder="e.g. 1000000">
+                                        </label>
+                                        <label>
+                                            <span>Packets/Second</span>
+                                            <input type="number" name="flowPktsPerSecond" value="0" step="any" placeholder="e.g. 50">
+                                        </label>
+                                        <label>
+                                            <span>Bytes/Second</span>
+                                            <input type="number" name="flowBytesPerSecond" value="0" step="any" placeholder="e.g. 5000">
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Forward IAT -->
+                                <div class="feature-group">
+                                    <h3>➡️ Forward Inter-Arrival Time</h3>
+                                    <div class="input-row">
+                                        <label>
+                                            <span>Total FIAT</span>
+                                            <input type="number" name="total_fiat" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Min FIAT</span>
+                                            <input type="number" name="min_fiat" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Max FIAT</span>
+                                            <input type="number" name="max_fiat" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Mean FIAT</span>
+                                            <input type="number" name="mean_fiat" value="0" step="any">
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Backward IAT -->
+                                <div class="feature-group">
+                                    <h3>⬅️ Backward Inter-Arrival Time</h3>
+                                    <div class="input-row">
+                                        <label>
+                                            <span>Total BIAT</span>
+                                            <input type="number" name="total_biat" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Min BIAT</span>
+                                            <input type="number" name="min_biat" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Max BIAT</span>
+                                            <input type="number" name="max_biat" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Mean BIAT</span>
+                                            <input type="number" name="mean_biat" value="0" step="any">
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Flow IAT -->
+                                <div class="feature-group">
+                                    <h3>🔄 Flow Inter-Arrival Time</h3>
+                                    <div class="input-row">
+                                        <label>
+                                            <span>Min Flow IAT</span>
+                                            <input type="number" name="min_flowiat" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Max Flow IAT</span>
+                                            <input type="number" name="max_flowiat" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Mean Flow IAT</span>
+                                            <input type="number" name="mean_flowiat" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Std Flow IAT</span>
+                                            <input type="number" name="std_flowiat" value="0" step="any">
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Active Time -->
+                                <div class="feature-group">
+                                    <h3>🟢 Active Time</h3>
+                                    <div class="input-row">
+                                        <label>
+                                            <span>Min Active</span>
+                                            <input type="number" name="min_active" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Max Active</span>
+                                            <input type="number" name="max_active" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Mean Active</span>
+                                            <input type="number" name="mean_active" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Std Active</span>
+                                            <input type="number" name="std_active" value="0" step="any">
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Idle Time -->
+                                <div class="feature-group">
+                                    <h3>🔴 Idle Time</h3>
+                                    <div class="input-row">
+                                        <label>
+                                            <span>Min Idle</span>
+                                            <input type="number" name="min_idle" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Max Idle</span>
+                                            <input type="number" name="max_idle" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Mean Idle</span>
+                                            <input type="number" name="mean_idle" value="0" step="any">
+                                        </label>
+                                        <label>
+                                            <span>Std Idle</span>
+                                            <input type="number" name="std_idle" value="0" step="any">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="predict-btn">
+                                <span>🔮 Classify Traffic</span>
+                            </button>
+                        </form>
+                    </section>
+                </div>
+
+                <!-- CSV Upload Tab -->
+                <div class="tab-content" id="csv-tab">
+                    <section class="card">
+                        <h2>📄 Upload CSV File</h2>
+                        <div class="upload-zone" id="upload-zone">
+                            <div class="upload-icon">📁</div>
+                            <p>Drag & drop your CSV file here</p>
+                            <p class="upload-hint">or click to browse</p>
+                            <input type="file" id="csv-file" accept=".csv" hidden>
+                        </div>
+                        <div class="file-info" id="file-info" style="display: none;">
+                            <span class="file-name"></span>
+                            <button class="remove-file">✕</button>
+                        </div>
+                        <button class="predict-btn" id="csv-predict-btn" disabled>
+                            <span>🔮 Classify All Rows</span>
+                        </button>
+                    </section>
+                </div>
+
+                <!-- Demo Tab -->
+                <div class="tab-content" id="demo-tab">
+                    <section class="card">
+                        <h2>🎮 Traffic Types & QoS Profiles</h2>
+                        <p class="demo-desc">Click on a traffic type to see its QoS optimization recommendations:</p>
+                        <div class="demo-buttons">
+                            {% for class_name, info in classes.items() %}
+                            <button class="demo-btn" data-class="{{ class_name }}" style="--accent-color: {{ info.color }}">
+                                <span class="demo-icon">{{ info.icon }}</span>
+                                <span class="demo-name">{{ class_name }}</span>
+                                <span class="demo-desc">{{ info.desc }}</span>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <section class="card results-section" id="results" style="display: none;">
+                <h2>📊 Classification Result</h2>
+                <div class="result-content">
+                    <div class="result-main">
+                        <div class="result-icon" id="result-icon">🌐</div>
+                        <div class="result-text">
+                            <h3 id="result-class">BROWSING</h3>
+                            <p id="result-desc">Web Browsing Traffic</p>
+                            <span class="vpn-badge" id="vpn-badge" style="display: none;">🔒 VPN</span>
+                        </div>
+                    </div>
+                    <div class="result-model">
+                        <span>Model:</span>
+                        <strong id="result-model">LightGBM</strong>
+                    </div>
+                </div>
+                <div class="probabilities" id="probabilities"></div>
+            </section>
+
+            <!-- Performance Analysis Section -->
+            <section class="card performance-section" id="performance-results" style="display: none;">
+                <h2>📈 Estimated Traffic Performance</h2>
+                <p class="performance-note">Based on input flow characteristics</p>
+                
+                <div class="performance-grid">
+                    <!-- Quality Score -->
+                    <div class="perf-card quality-card">
+                        <div class="perf-header">
+                            <span class="perf-icon">🎯</span>
+                            <span class="perf-label">Flow Quality</span>
+                        </div>
+                        <div class="quality-circle" id="quality-circle">
+                            <span class="quality-score" id="quality-score">85</span>
+                            <span class="quality-label" id="quality-level">Good</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Delay Indicator -->
+                    <div class="perf-card">
+                        <div class="perf-header">
+                            <span class="perf-icon">⏱️</span>
+                            <span class="perf-label">Delay Indicator</span>
+                        </div>
+                        <div class="perf-value" id="perf-delay">~50ms</div>
+                        <div class="perf-sub">Estimated from IAT</div>
+                    </div>
+                    
+                    <!-- Jitter Indicator -->
+                    <div class="perf-card">
+                        <div class="perf-header">
+                            <span class="perf-icon">📊</span>
+                            <span class="perf-label">Jitter Indicator</span>
+                        </div>
+                        <div class="perf-value" id="perf-jitter">~12ms</div>
+                        <div class="perf-sub">Estimated from IAT variance</div>
+                    </div>
+                    
+                    <!-- Throughput -->
+                    <div class="perf-card">
+                        <div class="perf-header">
+                            <span class="perf-icon">🚀</span>
+                            <span class="perf-label">Throughput</span>
+                        </div>
+                        <div class="perf-value" id="perf-throughput">5.2 KB/s</div>
+                        <div class="perf-sub">Current flow rate</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- QoS Optimization Section -->
+            <section class="card qos-section" id="qos-results" style="display: none;">
+                <h2>⚡ QoS Optimization Recommendations</h2>
+                
+                <div class="qos-grid">
+                    <!-- Priority -->
+                    <div class="qos-card priority-card" id="qos-priority">
+                        <div class="qos-card-header">
+                            <span class="qos-icon">🎯</span>
+                            <span class="qos-label">Priority Level</span>
+                        </div>
+                        <div class="qos-value" id="qos-priority-value">CRITICAL</div>
+                        <div class="priority-bar" id="priority-bar"></div>
+                    </div>
+
+                    <!-- Bandwidth -->
+                    <div class="qos-card">
+                        <div class="qos-card-header">
+                            <span class="qos-icon">📶</span>
+                            <span class="qos-label">Bandwidth</span>
+                        </div>
+                        <div class="qos-value" id="qos-bandwidth">100 Kbps - 500 Kbps</div>
+                        <div class="qos-sub">Guaranteed / Maximum</div>
+                    </div>
+
+                    <!-- Latency -->
+                    <div class="qos-card">
+                        <div class="qos-card-header">
+                            <span class="qos-icon">⏱️</span>
+                            <span class="qos-label">Max Latency</span>
+                        </div>
+                        <div class="qos-value" id="qos-latency">&lt; 150ms</div>
+                        <div class="qos-sub">Delay Requirement</div>
+                    </div>
+
+                    <!-- Jitter -->
+                    <div class="qos-card">
+                        <div class="qos-card-header">
+                            <span class="qos-icon">📊</span>
+                            <span class="qos-label">Max Jitter</span>
+                        </div>
+                        <div class="qos-value" id="qos-jitter">&lt; 30ms</div>
+                        <div class="qos-sub">Variation Tolerance</div>
+                    </div>
+
+                    <!-- Packet Loss -->
+                    <div class="qos-card">
+                        <div class="qos-card-header">
+                            <span class="qos-icon">📦</span>
+                            <span class="qos-label">Packet Loss</span>
+                        </div>
+                        <div class="qos-value" id="qos-packet-loss">&lt; 0.1%</div>
+                        <div class="qos-sub">Loss Tolerance</div>
+                    </div>
+
+                    <!-- DSCP -->
+                    <div class="qos-card">
+                        <div class="qos-card-header">
+                            <span class="qos-icon">🏷️</span>
+                            <span class="qos-label">DSCP Marking</span>
+                        </div>
+                        <div class="qos-value" id="qos-dscp">46 (EF)</div>
+                        <div class="qos-sub">Packet Priority Tag</div>
+                    </div>
+                </div>
+
+                <!-- Recommended Actions -->
+                <div class="qos-actions">
+                    <h3>🛠️ Recommended Network Actions</h3>
+                    <ul id="qos-actions-list">
+                        <li>Place in priority queue</li>
+                    </ul>
+                </div>
+
+                <!-- QoS Description -->
+                <div class="qos-description" id="qos-description">
+                    Voice over IP - Requires lowest latency and jitter for clear calls
+                </div>
+            </section>
+
+            <!-- CSV Results -->
+            <section class="card csv-results" id="csv-results" style="display: none;">
+                <h2>📊 Batch Classification Results</h2>
+                <div class="csv-summary" id="csv-summary"></div>
+                <div class="csv-table-container">
+                    <table class="csv-table" id="csv-table">
+                        <thead>
+                            <tr>
+                                <th>Row</th>
+                                <th>Prediction</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Built with 🧠 Machine Learning • LightGBM, XGBoost, RandomForest</p>
+            <p class="footer-stats">97% Accuracy • 7 Traffic Classes • 38 Features</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+

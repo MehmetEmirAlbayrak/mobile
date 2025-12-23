@@ -51,7 +51,7 @@ Mobile/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/MehmetEmirAlbayrak/mobile-traffic-classification.git
+git clone https://github.com/MehmetEmirAlbayrak/mobile.git
 cd mobile-traffic-classification
 ```
 
